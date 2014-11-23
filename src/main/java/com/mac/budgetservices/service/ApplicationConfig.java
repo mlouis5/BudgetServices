@@ -16,9 +16,6 @@ import org.glassfish.jersey.server.ResourceConfig;
 public class ApplicationConfig extends ResourceConfig {
 
     public ApplicationConfig(){
-        //this.packages("com.mac.budgetservices", "com.mac.budgetservices.service.filters");
-       
-        //Set<Class<?>> resources = new java.util.HashSet<>();
         register(com.mac.budgetservices.service.AddressFacadeREST.class);
         register(com.mac.budgetservices.service.BillFacadeREST.class);
         register(com.mac.budgetservices.service.IncomeFacadeREST.class);
@@ -27,16 +24,6 @@ public class ApplicationConfig extends ResourceConfig {
         register(com.mac.budgetservices.service.UserFacadeREST.class);
         register(com.mac.budgetservices.service.filters.CORSResponseFilter.class);
     }
-    /**
-     *
-     * @return
-     */
-//    @Override
-//    public Set<Class<?>> getClasses() {
-//        Set<Class<?>> resources = new java.util.HashSet<>();
-//        addRestResourceClasses(resources);
-//        return resources;
-//    }
 
     /**
      * Do not modify addRestResourceClasses() method.
