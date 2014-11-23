@@ -5,8 +5,13 @@
  */
 package com.mac.budgetservices;
 
+import com.google.common.base.Charsets;
+import com.google.common.hash.HashCode;
+import com.google.common.hash.HashFunction;
+import com.google.common.hash.Hashing;
 import java.io.Serializable;
 import java.util.Date;
+import java.util.Objects;
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -38,6 +43,9 @@ import javax.xml.bind.annotation.XmlTransient;
     @NamedQuery(name = "Payment.findByPaymentLastNotificationDate", query = "SELECT p FROM Payment p WHERE p.paymentLastNotificationDate = :paymentLastNotificationDate"),
     @NamedQuery(name = "Payment.findByPaymentPaidDate", query = "SELECT p FROM Payment p WHERE p.paymentPaidDate = :paymentPaidDate")})
 public class Payment implements Serializable {
+    @Size(max = 2147483647)
+    @Column(name = "payment_qrcode_location", length = 2147483647)
+    private String paymentQrcodeLocation;
     private static final long serialVersionUID = 1L;
     @Id
     @Basic(optional = false)
@@ -71,22 +79,14 @@ public class Payment implements Serializable {
     public Payment() {
     }
 
-    public Payment(String paymentId) {
-        this.paymentId = paymentId;
-    }
-
-    public Payment(String paymentId, Date paymentDueDate, Date paymentFilingDate) {
-        this.paymentId = paymentId;
-        this.paymentDueDate = paymentDueDate;
-        this.paymentFilingDate = paymentFilingDate;
-    }
-
     public String getPaymentId() {
         return paymentId;
     }
 
     public void setPaymentId(String paymentId) {
-        this.paymentId = paymentId;
+        if (Objects.isNull(this.paymentId) || this.paymentId.isEmpty()) {
+            this.paymentId = paymentId;
+        }
     }
 
     public Date getPaymentDueDate() {
@@ -95,6 +95,7 @@ public class Payment implements Serializable {
 
     public void setPaymentDueDate(Date paymentDueDate) {
         this.paymentDueDate = paymentDueDate;
+        generateId();
     }
 
     public Date getPaymentFilingDate() {
@@ -128,6 +129,7 @@ public class Payment implements Serializable {
 
     public void setPaymentBillId(Bill paymentBillId) {
         this.paymentBillId = paymentBillId;
+        generateId();
     }
 
     @XmlTransient
@@ -141,9 +143,9 @@ public class Payment implements Serializable {
 
     @Override
     public int hashCode() {
-        int hash = 0;
-        hash += (paymentId != null ? paymentId.hashCode() : 0);
-        return hash;
+        HashFunction hf = Hashing.md5();
+        HashCode hc = hf.newHasher().putString(paymentId, Charsets.UTF_8).hash();
+        return hc.asInt();
     }
 
     @Override
@@ -153,15 +155,35 @@ public class Payment implements Serializable {
             return false;
         }
         Payment other = (Payment) object;
-        if ((this.paymentId == null && other.paymentId != null) || (this.paymentId != null && !this.paymentId.equals(other.paymentId))) {
-            return false;
-        }
-        return true;
+        return Objects.equals(this.paymentId, other.paymentId);
     }
 
     @Override
     public String toString() {
-        return "com.mac.budgetservices.Payment[ paymentId=" + paymentId + " ]";
+        return "com.mac.budgetmanager.pojo.entities.Payment[ paymentId=" + paymentId + " ]";
+    }
+
+    private void generateId() {
+        if (Objects.nonNull(paymentDueDate) && Objects.nonNull(paymentBillId)
+                && Objects.nonNull(paymentBillId.getBillId())
+                && !paymentBillId.getBillId().isEmpty()
+                && Objects.nonNull(paymentBillId.getBillOwner())
+                && Objects.nonNull(paymentBillId.getBillOwner().getUserId())
+                && !paymentBillId.getBillOwner().getUserId().isEmpty()) {
+            HashFunction hf = Hashing.md5();
+            HashCode hc = hf.newHasher()
+                    .putLong(paymentDueDate.getTime())
+                    .putString(paymentBillId.getBillId(), Charsets.UTF_8)
+                    .putString(paymentBillId.getBillOwner().getUserId(), Charsets.UTF_8).hash();
+            this.paymentId = hc.toString();
+        }
     }
     
+    public String getPaymentQrcodeLocation() {
+        return paymentQrcodeLocation;
+    }
+
+    public void setPaymentQrcodeLocation(String paymentQrcodeLocation) {
+        this.paymentQrcodeLocation = paymentQrcodeLocation;
+    }
 }

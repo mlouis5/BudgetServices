@@ -5,8 +5,14 @@
  */
 package com.mac.budgetservices;
 
+import com.google.common.base.Charsets;
+import com.google.common.hash.HashCode;
+import com.google.common.hash.HashFunction;
+import com.google.common.hash.Hashing;
 import java.io.Serializable;
-import java.util.Collection;
+import java.util.List;
+import java.util.List;
+import java.util.Objects;
 import javax.persistence.Basic;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -68,29 +74,26 @@ public class User implements Serializable {
     @Column(name = "user_preferred_contact")
     private String userPreferredContact;
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "incomeUserId")
-    private Collection<Income> incomeCollection;
+    private List<Income> incomeList;
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "billOwner")
-    private Collection<Bill> billCollection;
+    private List<Bill> billList;
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "paymentUserId")
-    private Collection<Payment> paymentCollection;
+    private List<Payment> paymentList;
     @JoinColumn(name = "user_address", referencedColumnName = "address_id")
     @ManyToOne
     private Address userAddress;
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "paycheckOwner")
-    private Collection<Paycheck> paycheckCollection;
+    private List<Paycheck> paycheckList;
 
     public User() {
     }
 
-    public User(String userId) {
-        this.userId = userId;
-    }
+    public User(String fName, String lName, String email) {
+        this.userFname = fName;
+        this.userLname = lName;
+        this.userEmail = email;
 
-    public User(String userId, String userFname, String userLname, String userEmail) {
-        this.userId = userId;
-        this.userFname = userFname;
-        this.userLname = userLname;
-        this.userEmail = userEmail;
+        generateId();
     }
 
     public String getUserId() {
@@ -98,7 +101,9 @@ public class User implements Serializable {
     }
 
     public void setUserId(String userId) {
-        this.userId = userId;
+        if(Objects.isNull(this.userId) || this.userId.isEmpty()){
+            this.userId = userId;
+        }
     }
 
     public String getUserFname() {
@@ -107,6 +112,7 @@ public class User implements Serializable {
 
     public void setUserFname(String userFname) {
         this.userFname = userFname;
+        generateId();
     }
 
     public String getUserLname() {
@@ -115,6 +121,7 @@ public class User implements Serializable {
 
     public void setUserLname(String userLname) {
         this.userLname = userLname;
+        generateId();
     }
 
     public String getUserPhone() {
@@ -131,6 +138,7 @@ public class User implements Serializable {
 
     public void setUserEmail(String userEmail) {
         this.userEmail = userEmail;
+        generateId();
     }
 
     public String getUserPreferredContact() {
@@ -142,30 +150,30 @@ public class User implements Serializable {
     }
 
     //@XmlTransient
-    public Collection<Income> getIncomeCollection() {
-        return incomeCollection;
+    public List<Income> getIncomeList() {
+        return incomeList;
     }
 
-    public void setIncomeCollection(Collection<Income> incomeCollection) {
-        this.incomeCollection = incomeCollection;
+    public void setIncomeList(List<Income> incomeList) {
+        this.incomeList = incomeList;
     }
 
     //@XmlTransient
-    public Collection<Bill> getBillCollection() {
-        return billCollection;
+    public List<Bill> getBillList() {
+        return billList;
     }
 
-    public void setBillCollection(Collection<Bill> billCollection) {
-        this.billCollection = billCollection;
+    public void setBillList(List<Bill> billList) {
+        this.billList = billList;
     }
 
     @XmlTransient
-    public Collection<Payment> getPaymentCollection() {
-        return paymentCollection;
+    public List<Payment> getPaymentList() {
+        return paymentList;
     }
 
-    public void setPaymentCollection(Collection<Payment> paymentCollection) {
-        this.paymentCollection = paymentCollection;
+    public void setPaymentList(List<Payment> paymentList) {
+        this.paymentList = paymentList;
     }
 
     public Address getUserAddress() {
@@ -177,37 +185,45 @@ public class User implements Serializable {
     }
 
     //@XmlTransient
-    public Collection<Paycheck> getPaycheckCollection() {
-        return paycheckCollection;
+    public List<Paycheck> getPaycheckList() {
+        return paycheckList;
     }
 
-    public void setPaycheckCollection(Collection<Paycheck> paycheckCollection) {
-        this.paycheckCollection = paycheckCollection;
+    public void setPaycheckList(List<Paycheck> paycheckList) {
+        this.paycheckList = paycheckList;
     }
 
     @Override
     public int hashCode() {
-        int hash = 0;
-        hash += (userId != null ? userId.hashCode() : 0);
-        return hash;
+        HashFunction hf = Hashing.md5();
+        HashCode hc = hf.newHasher().putString(userId, Charsets.UTF_8).hash();
+        return hc.asInt();
     }
 
     @Override
     public boolean equals(Object object) {
         // TODO: Warning - this method won't work in the case the id fields are not set
-        if (!(object instanceof User)) {
+        if (!(object instanceof Payment)) {
             return false;
         }
         User other = (User) object;
-        if ((this.userId == null && other.userId != null) || (this.userId != null && !this.userId.equals(other.userId))) {
-            return false;
-        }
-        return true;
+        return Objects.equals(this.userId, other.userId);
     }
 
     @Override
     public String toString() {
-        return "com.mac.budgetservices.User[ userId=" + userId + " ]";
+        return "com.mac.budgetmanager.pojo.entities.User[ userId=" + userId + " ]";
+    }
+
+    private void generateId() {
+        if (Objects.nonNull(userFname) && Objects.nonNull(userLname) && Objects.nonNull(userEmail)) {
+            HashFunction hf = Hashing.md5();
+            HashCode hc = hf.newHasher()
+                    .putString(userFname, Charsets.UTF_8)
+                    .putString(userLname, Charsets.UTF_8)
+                    .putString(userEmail, Charsets.UTF_8).hash();
+            this.userId = hc.toString();
+        }
     }
     
 }
